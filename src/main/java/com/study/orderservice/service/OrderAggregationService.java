@@ -4,7 +4,6 @@ import com.study.orderservice.client.order.OrderResponse;
 import com.study.orderservice.client.order.OrderClient;
 import com.study.orderservice.client.product.ProductClient;
 import com.study.orderservice.client.product.ProductResponse;
-import com.study.orderservice.controller.util.OrderNotFoundException;
 import com.study.orderservice.domain.user.OrderInfo;
 import com.study.orderservice.domain.user.User;
 import com.study.orderservice.repository.user.UserEntityMapper;
@@ -34,9 +33,8 @@ public class OrderAggregationService {
                  .parallel()
                  .flatMap(orderResponse -> productClient.searchProductByProductCode(orderResponse.productCode())
                          .reduce((product, product2) -> product.getScore() > product2.getScore() ? product : product2)
-                         .switchIfEmpty(Mono.just(new ProductResponse()))
                          .map(productResponse -> buildOrderInfo(userEntity, orderResponse, productResponse))
-                         .doOnEach(logOnNext((e -> log.info("Aggregated order [{}]", e.orderNumber()))))
+                         .doOnEach(logOnNext((orderInfo -> log.info("Aggregated order [{}]", orderInfo.orderNumber()))))
                          .doOnEach(logOnError((e -> log.error("Failed to aggregate order. Error message [{}]", e.getMessage()))))
                ));
     }

@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.study.orderservice.client.order.OrderResponse;
 import com.study.orderservice.client.product.ProductResponse;
 import com.study.orderservice.config.DefaultTestConfiguration;
+import com.study.orderservice.controller.util.ErrorResponse;
 import com.study.orderservice.domain.user.OrderInfo;
 import com.study.orderservice.repository.user.UserEntity;
 import com.study.orderservice.repository.user.UserInfoRepository;
@@ -33,7 +34,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @WebAppConfiguration
 @ContextConfiguration(classes = DefaultTestConfiguration.class)
 @AutoConfigureWebTestClient
-public class OrderAggregationServiceTest {
+public class OrderAggregationIT {
 
     @Container
     private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0").withExposedPorts(27017);
@@ -97,7 +98,7 @@ public class OrderAggregationServiceTest {
 
     @Test
     public void testGetAggregatedOrdersWhenNoOrderFound_emptyFlux() {
-        String response = webTestClient.get()
+        ErrorResponse response = webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/orderAggregationService/orders")
                         .queryParam(USER_ID_QUERY_PARAM_NAME, USER_ID)
@@ -105,11 +106,12 @@ public class OrderAggregationServiceTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isEqualTo(502)
-                .returnResult(new ParameterizedTypeReference<String>() {})
+                .returnResult(ErrorResponse.class)
                 .getResponseBody()
                 .blockFirst();
 
-        assertThat(response).isEqualTo("404 Not Found from GET http://localhost:8081/orderSearchService/order/phone");
+        assertThat(response.message()).isEqualTo("502 Service Temporarily Overloaded");
+        assertThat(response.details()).isEqualTo("404 Not Found from GET http://localhost:8081/orderSearchService/order/phone");
     }
 
     @Test

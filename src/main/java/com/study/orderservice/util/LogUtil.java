@@ -15,7 +15,6 @@ public class LogUtil {
         return signal -> {
             if (!signal.isOnNext()) return;
             Optional<String> toPutInMdc = signal.getContextView().getOrEmpty(MDC_TRACE_ID);
-
             toPutInMdc.ifPresentOrElse(tpim -> {
                         try (MDC.MDCCloseable cMdc = MDC.putCloseable(MDC_TRACE_ID, tpim)) {
                             logStatement.accept(signal.get());
@@ -29,7 +28,6 @@ public class LogUtil {
         return signal -> {
             if (!signal.isOnError()) return;
             Optional<String> toPutInMdc = signal.getContextView().getOrEmpty(MDC_TRACE_ID);
-
             toPutInMdc.ifPresentOrElse(tpim -> {
                         try (MDC.MDCCloseable cMdc = MDC.putCloseable(MDC_TRACE_ID, tpim)) {
                             errorLogStatement.accept(signal.getThrowable());
